@@ -10,7 +10,10 @@ Created on Sat Nov 21 20:40:13 2020
 import pandas as pd
 import numpy as np
 
+import matplotlib.pyplot as plt
 from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
+
 from sklearn.model_selection import train_test_split
 
 
@@ -87,11 +90,13 @@ testY = testY.to_numpy(dtype=int);
 testX = test.drop(columns=["Turnover"])
 
 
-regressor = LogisticRegression()
+
+regressor = LogisticRegression(solver="saga", max_iter=150, penalty="elasticnet", l1_ratio=0.2)
 
 
 regressor.fit(trainX, trainY)
 
+print(regressor.score(testX, testY))
 predictions = regressor.predict(testX)
 
 
@@ -101,14 +106,25 @@ for i in range(len(predictions)):
         count+=1
     
 
-print(count/len(testY))
+#print(count/len(testY))
         
-    
-    
+#svm = SVC(random_state=1, gamma='auto')
+#svm.fit(trainX, trainY)
+#svm_prediction = svm.predict(testX)
+#svm_score = svm.score(testX, testY)
+#print(svm_score)
+#
+#    
 
 
 
+coefficients = regressor.coef_[0]
+classes = list(testX.columns)
+print(len(coefficients), len(classes));
 
+plt.figure()
+plt.bar(classes, coefficients)
+plt.show()
 
 
 
