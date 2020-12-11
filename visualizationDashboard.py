@@ -21,9 +21,9 @@ from datetime import datetime as dt
 
 app = dash.Dash(__name__,external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-
-datum = pd.read_csv("dap-planning.csv", converters={"label": ast.literal_eval,
-                                                 "assignees": ast.literal_eval})
+#
+#datum = pd.read_csv("dap-planning.csv", converters={"label": ast.literal_eval,
+#                                                 "assignees": ast.literal_eval})
 # df_label = df.explode('label')
 # label_count = df_label.groupby("label")['label'].count().reset_index(name="count")
 # label_count = label_count.sort_values(by=['count'], ascending=False)
