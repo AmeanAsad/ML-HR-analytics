@@ -123,7 +123,7 @@ classes = list(testX.columns)
 print(len(coefficients), len(classes));
 
 plt.figure()
-plt.bar(classes, coefficients)
+plt.barh(classes, coefficients)
 plt.show()
 
 
