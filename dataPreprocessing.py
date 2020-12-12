@@ -82,6 +82,7 @@ def encodeStringCategories(columns, df):
 
 data = encodeStringCategories(categoricalData, generalData)
 data = data.join(turnover)
+data = data.drop(columns=["Human Resourcestest"])
 # Remove any null valued data
 data = data.fillna(0)
 # Data Normalization
@@ -114,16 +115,23 @@ coefficients = pd.concat([pd.DataFrame(testX.columns),
 
 coefficients.columns = ["features", "weights", "abs_weights"]
 coefficients = coefficients.sort_values(by=["abs_weights"], ascending=False)
+
+negativeCoefficients = coefficients[coefficients["weights"] < 0]
+positiveCoefficients = coefficients[coefficients["weights"] > 0]
+
 coefficients = coefficients.head(15)
 
+
+
 cm = metrics.confusion_matrix(testY, predictions)
-print(cm)
 
 chart = px.bar(x=coefficients["features"],
-                   y=coefficients["weights"], orientation="v")
-chart.update_layout(transition_duration=1000,
-                             title="Number of Daily Issues")
-
+               y=coefficients["weights"], orientation="v")
+chart.update_layout(transition={
+                'duration': 500,
+                'easing': 'cubic-in-out'
+                })
+    
 # print(items.head)
 #classes = list(testX.columns)
 #print(len(coefficients), len(classes));
@@ -133,12 +141,29 @@ chart.update_layout(transition_duration=1000,
 #Y = coefficients["weights"].to_numpy()[10]
 # plt.show()
 
+#######################################################################
+#######################################################################
+
+def getLabels(df):
+    labels = list(df.columns)
+    labels = [{"value": x, "label": x} for x in labels]
+    return labels
 
 #####################################################################
 
 #####################################################################
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+
+
+def dropDown():
+    dropdown = dcc.Dropdown(
+        id='time-series-dropdown',
+        options=getLabels(generalData),
+        value="Age",
+        style={"width": "100%"}
+    )
+    return dropdown
 
 
 app.layout = html.Div(children=[
@@ -148,7 +173,10 @@ app.layout = html.Div(children=[
         [
             dbc.Col(dcc.Graph(id='top-labels',
                               figure=chart),),
-            dbc.Col(dcc.Graph(id='test'),),
+            dbc.Col([
+                dbc.Row(dropDown()),
+                dbc.Row(dcc.Graph(id='histograms'))
+                    ]),
         ]
     ),
 ],   style={
@@ -156,20 +184,18 @@ app.layout = html.Div(children=[
 })
 
 
-#@app.callback(
-#    [Output('top-labels', 'figure'),
-#     ],
-#)
-#def chart():
-#
-#    X = coefficients["feautres"].to_numpy()
-#    Y = coefficients["features"].to_numpy()
-#    chart = px.bar(x=coefficients["features"],
-#                   y=coefficients["weights"], orientation="h")
-#    chart.update_layout(transition_duration=1000,
-#                             title="Number of Daily Issues")
-#
-#    return [chart]
+@app.callback(
+    [Output('histograms', 'figure')],
+     Input('time-series-dropdown', 'value')
+)
+def chart(value):
+    vals = generalData[value].to_numpy()
+    chart = px.histogram(x=vals)
+    chart.update_layout(transition_duration=2000,
+                             title="Number of Daily Issues")
+
+    return [chart]
+
 
 
 if __name__ == '__main__':
