@@ -28,40 +28,6 @@ from sklearn.model_selection import train_test_split
 dataLocation = "EmployeeData"
 
 
-# Prepare file directories for each data surveyed
-generalDataLocation = dataLocation + "/general_data.csv"
-employeeSurveyLocation = dataLocation + "/employee_survey_data.csv"
-managerSurveyLocation = dataLocation + "/manager_survey_data.csv"
-
-generalData = pd.read_csv(generalDataLocation)
-generalData.sort_values(by=['EmployeeID'])
-turnover = generalData["Attrition"]
-generalData = generalData.drop(
-    columns=["Over18", "EmployeeCount", "StandardHours"])
-
-generalData.to_json(path_or_buf = "ProcessedData/data.json", orient="records" )
-
-generalData = generalData.drop(columns=["Attrition"])
-managerSurveyData = pd.read_csv(managerSurveyLocation)
-employeeSurveyData = pd.read_csv(employeeSurveyLocation)
-
-managerSurveyData = managerSurveyData.sort_values(by=["EmployeeID"])
-employeeSurveyData = employeeSurveyData.sort_values(by=["EmployeeID"])
-
-managerSurveyData = managerSurveyData.drop(columns=["EmployeeID"])
-employeeSurveyData = employeeSurveyData.drop(columns=["EmployeeID"])
-
-generalData = generalData.join([managerSurveyData, employeeSurveyData])
-generalData = generalData.drop(columns=["EmployeeID"])
-
-categoricalData = list(generalData.select_dtypes(include='object').columns)
-
-# 1 -> Employee left
-# 0 -> Employee remains
-turnover = pd.DataFrame(
-    np.where(turnover == "Yes", 1, 0), columns=["Turnover"])
-
-
 def encodeStringCategories(columns, df):
     """
     Parameters
@@ -84,6 +50,40 @@ def encodeStringCategories(columns, df):
     return df
 
 
+# Prepare file directories for each data surveyed
+generalDataLocation = dataLocation + "/general_data.csv"
+employeeSurveyLocation = dataLocation + "/employee_survey_data.csv"
+managerSurveyLocation = dataLocation + "/manager_survey_data.csv"
+
+generalData = pd.read_csv(generalDataLocation)
+generalData.sort_values(by=['EmployeeID'])
+turnover = generalData["Attrition"]
+generalData = generalData.drop(
+    columns=["Over18", "EmployeeCount", "StandardHours"])
+
+generalData.to_json(path_or_buf ="ProcessedData/data.json", orient="records")
+
+generalData = generalData.drop(columns=["Attrition"])
+managerSurveyData = pd.read_csv(managerSurveyLocation)
+employeeSurveyData = pd.read_csv(employeeSurveyLocation)
+
+managerSurveyData = managerSurveyData.sort_values(by=["EmployeeID"])
+employeeSurveyData = employeeSurveyData.sort_values(by=["EmployeeID"])
+
+managerSurveyData = managerSurveyData.drop(columns=["EmployeeID"])
+employeeSurveyData = employeeSurveyData.drop(columns=["EmployeeID"])
+
+generalData = generalData.join([managerSurveyData, employeeSurveyData])
+generalData = generalData.drop(columns=["EmployeeID"])
+
+categoricalData = list(generalData.select_dtypes(include='object').columns)
+
+# 1 -> Employee left
+# 0 -> Employee remains
+turnover = pd.DataFrame(
+    np.where(turnover == "Yes", 1, 0), columns=["Turnover"])
+
+
 data = encodeStringCategories(categoricalData, generalData)
 data = data.join(turnover)
 data = data.drop(columns=["Human Resourcestest"])
@@ -91,8 +91,7 @@ data = data.drop(columns=["Human Resourcestest"])
 data = data.fillna(0)
 # Data Normalization
 data = ((data-data.min())/(data.max() - data.min()))
-
-data.to_json(path_or_buf="ProcessedData/normalizedData.json")
+data.to_json(path_or_buf = "ProcessedData/data.json", orient="records" )
 
 train, test = train_test_split(data, test_size=0.25)
 
@@ -106,22 +105,17 @@ regressor = LogisticRegression(
     solver="saga", max_iter=150, penalty="elasticnet", l1_ratio=0.2)
 regressor.fit(trainX, trainY)
 
+predictions = regressor.predict(testX)
 score = regressor.score(testX, testY)
 print(score)
-predictions = regressor.predict(testX)
-
 
 weights = pd.DataFrame(np.transpose(regressor.coef_))
-
 coefficients = pd.concat([pd.DataFrame(testX.columns),
                           weights,
                           abs(weights)], axis=1)
 
 coefficients.columns = ["features", "weights", "abs_weights"]
 coefficients = coefficients.sort_values(by=["abs_weights"], ascending=False)
-coefficients.to_json(path_or_buf="ProcessedData/coefficients.json")
-
-topCoefficients = coefficients.head(15)
-
+coefficients.to_json(path_or_buf = "ProcessedData/data.json", orient="records" )
 cm = metrics.confusion_matrix(testY, predictions)
 
