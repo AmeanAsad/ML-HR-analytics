@@ -70,7 +70,7 @@ app.layout = html.Div(children=[
                         ), style={"width": "100%"}),
                     dbc.Row(dcc.Graph(id='issue-time-series'))
                 ], width=6),
-            dbc.Col(dcc.Graph(id='bar-plot'), width=6)   
+            dbc.Col(dcc.Graph(id='bar-plot'))   
         ]
         ),
     dbc.Row(

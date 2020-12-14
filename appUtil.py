@@ -10,6 +10,7 @@ import json
 import plotly.express as px
 import numpy as np
 
+TEMPLATE="simple_white"
 
 def getDataFrame(path):
     with open(path) as dataJSON:
@@ -20,8 +21,9 @@ def getDataFrame(path):
 
 def getDistPlots(data, value):
     vals = data[value].to_numpy()
-    chart = px.histogram(x=vals)
+    chart = px.histogram(data, x=value, template=TEMPLATE)
     chart.update_layout(transition_duration=2000,
+                        autosize=True,
                         title="Number of Daily Issues")
     return [chart]
 
@@ -30,20 +32,26 @@ def getPieChart(coefficients, value):
     if value == "positive":
         df = getPositiveCoefficients(coefficients)
         chart = px.pie(df, values='abs_weights', names='features',
+                       template=TEMPLATE,
                        title='Factors Contributing to Attrition')
     else:
         df = getNegativeCoefficients(coefficients)
         chart = px.pie(df, values='abs_weights', names='features',
+                       template=TEMPLATE,
                        title='Factors Keeping Employees Stay')
 
-    chart.update_layout(transition_duration=2000)
+    chart.update_layout(transition_duration=2000,
+                        autosize=True)
     return [chart]
 
 
 def getCoefficientsChart(coefficients):
     topCoefficients = coefficients.head(15)
     chart = px.bar(x=topCoefficients["features"],
-                   y=topCoefficients["weights"], orientation="v")
+                   y=topCoefficients["weights"],
+                   orientation="v",
+                   height=700,
+                   template=TEMPLATE)
     chart.update_layout(transition={
         'duration': 500,
         'easing': 'cubic-in-out'

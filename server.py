@@ -22,7 +22,7 @@ COEFFICIENTS_PATH = "{}/coefficients.json".format(PATH)
 DATA_PATH = "{}/data.json".format(PATH)
 NORMALIZED_DATA_PATH = "{}/normalizedData.json".format(PATH)
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.COSMO])
 
 
 data = appUtil.getDataFrame(DATA_PATH)
@@ -51,10 +51,16 @@ app.layout = html.Div(children=[
                               figure=coefficientChart), sm=6),
             dbc.Col([
                 dbc.Row(dropDown()),
-                dbc.Row(dcc.Graph(id='histograms'))
+                dbc.Row(dcc.Graph(id='histograms',
+                       style={"width":"100%"}))
             ], sm=6),
         ]
     ),
+#    dbc.Row([
+#            (dcc.Graph(id='histograms',
+#                       style={"width":"100%"}))
+#            ]
+#            ),
     dbc.Row(
         [
             dbc.Col(dcc.Graph(id='top-contributers',
@@ -71,7 +77,8 @@ app.layout = html.Div(children=[
                         style={"width": "100%"}
                         ),
                         style={"width": "100%"}),
-                dbc.Row(dcc.Graph(id='contributers'))
+                dbc.Row(dcc.Graph(id='contributers',
+                                  style={"width":"100%"}))
             ], sm=6),
 
         ]
