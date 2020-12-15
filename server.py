@@ -30,12 +30,22 @@ normalizedData = appUtil.getDataFrame(NORMALIZED_DATA_PATH)
 coefficients = appUtil.getDataFrame(COEFFICIENTS_PATH)
 
 
-def dropDown():
+def dropDown(uniqueId, data):
     dropdown = dcc.Dropdown(
-        id='time-series-dropdown',
+        id=uniqueId,
         options=appUtil.getLabels(data),
         value="Age",
-        style={"width": "100%"}
+        style={"width": "80%"}
+    )
+    return dropdown
+
+
+def getCorrelatorDropdowns(data):
+    dropdown = dbc.Row(
+        [
+            dbc.Col(dropDown("correlator-1", data)),
+            dbc.Col(dropDown("correlator-2", data))
+        ]
     )
     return dropdown
 
@@ -50,21 +60,24 @@ app.layout = html.Div(children=[
             dbc.Col(dcc.Graph(id='top-labels',
                               figure=coefficientChart), sm=6),
             dbc.Col([
-                dbc.Row(dropDown()),
+                dbc.Row(dropDown("distplot-dropdown", data)),
                 dbc.Row(dcc.Graph(id='histograms',
-                       style={"width":"100%"}))
+                                  style={"width": "100%"}))
             ], sm=6),
         ]
     ),
-#    dbc.Row([
-#            (dcc.Graph(id='histograms',
-#                       style={"width":"100%"}))
-#            ]
-#            ),
+    #    dbc.Row([
+    #            (dcc.Graph(id='histograms',
+    #                       style={"width":"100%"}))
+    #            ]
+    #            ),
     dbc.Row(
         [
-            dbc.Col(dcc.Graph(id='top-contributers',
-                              figure=coefficientChart), sm=6),
+            dbc.Col([
+                    getCorrelatorDropdowns(normalizedData),
+                    dbc.Row(dcc.Graph(id='gauge-correlation',
+                                      style={"width": "100%"}))
+                    ]),
             dbc.Col([
                 dbc.Row(dcc.RadioItems(
                         id='radio-items',
@@ -78,7 +91,7 @@ app.layout = html.Div(children=[
                         ),
                         style={"width": "100%"}),
                 dbc.Row(dcc.Graph(id='contributers',
-                                  style={"width":"100%"}))
+                                  style={"width": "100%"}))
             ], sm=6),
 
         ]
@@ -90,7 +103,7 @@ app.layout = html.Div(children=[
 
 @app.callback(
     [Output('histograms', 'figure')],
-    Input('time-series-dropdown', 'value')
+    Input('distplot-dropdown', 'value')
 )
 def distPlot(value):
     chart = appUtil.getDistPlots(data, value)
@@ -106,5 +119,19 @@ def piePlot(value):
     return chart
 
 
+@app.callback(
+    [Output('gauge-correlation', 'figure')],
+    [
+        Input('correlator-1', 'value'),
+        Input("correlator-2", "value")
+    ]
+)
+def correlationPlot(correlator1, correlator2):
+    chart = appUtil.getCorrelationIndicator(normalizedData,
+                                            correlator1,
+                                            correlator2)
+    return chart
+
+
 if __name__ == '__main__':
-   app.run_server(debug=True, use_reloader=False)
+    app.run_server(debug=True, use_reloader=False)

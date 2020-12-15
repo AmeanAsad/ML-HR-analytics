@@ -8,9 +8,11 @@ Created on Sun Dec 13 19:54:51 2020
 import pandas as pd
 import json
 import plotly.express as px
+import plotly.graph_objects as go
 import numpy as np
 
-TEMPLATE="simple_white"
+TEMPLATE = "simple_white"
+
 
 def getDataFrame(path):
     with open(path) as dataJSON:
@@ -26,6 +28,17 @@ def getDistPlots(data, value):
                         autosize=True,
                         title="Number of Daily Issues")
     return [chart]
+
+
+def getCorrelationIndicator(data, value1, value2):
+    correlation = data[value1].corr(data[value2])
+
+    figure = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=correlation,
+        domain={'x': [0, 1], 'y': [0, 1]},
+        title={'text': "Variable Correlation"}))
+    return [figure]
 
 
 def getPieChart(coefficients, value):
