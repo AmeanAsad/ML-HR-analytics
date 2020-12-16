@@ -30,12 +30,12 @@ normalizedData = appUtil.getDataFrame(NORMALIZED_DATA_PATH)
 coefficients = appUtil.getDataFrame(COEFFICIENTS_PATH)
 
 
-def dropDown(uniqueId, data):
+def dropDown(uniqueId, data, width):
     dropdown = dcc.Dropdown(
         id=uniqueId,
         options=appUtil.getLabels(data),
         value="Age",
-        style={"width": "80%"}
+        style={"width": width}
     )
     return dropdown
 
@@ -43,8 +43,8 @@ def dropDown(uniqueId, data):
 def getCorrelatorDropdowns(data):
     dropdown = dbc.Row(
         [
-            dbc.Col(dropDown("correlator-1", data)),
-            dbc.Col(dropDown("correlator-2", data))
+            dbc.Col(dropDown("correlator-1", data, "100%"), md=6),
+            dbc.Col(dropDown("correlator-2", data, "100%"), md=6)
         ]
     )
     return dropdown
@@ -60,7 +60,7 @@ app.layout = html.Div(children=[
             dbc.Col(dcc.Graph(id='top-labels',
                               figure=coefficientChart), sm=6),
             dbc.Col([
-                dbc.Row(dropDown("distplot-dropdown", data)),
+                dbc.Row(dropDown("distplot-dropdown", data, "75%")),
                 dbc.Row(dcc.Graph(id='histograms',
                                   style={"width": "100%"}))
             ], sm=6),

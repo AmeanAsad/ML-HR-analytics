@@ -11,7 +11,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 
-TEMPLATE = "simple_white"
+TEMPLATE = "plotly"
+px.defaults.color_continuous_scale = px.colors.sequential.RdBu
 
 
 def getDataFrame(path):
@@ -23,10 +24,16 @@ def getDataFrame(path):
 
 def getDistPlots(data, value):
     vals = data[value].to_numpy()
-    chart = px.histogram(data, x=value, template=TEMPLATE)
+    chart = px.histogram(data, x=value,
+                         color_discrete_sequence=[  '#1f77b4',],
+                         template=TEMPLATE)
     chart.update_layout(transition_duration=2000,
                         autosize=True,
+                         bargap =  0.2,
+
                         title="Number of Daily Issues")
+#    chart.update_traces(marker_color='#1f77b4' , marker_line_color='#1f77b4',
+#                  marker_line_width=2.5)
     return [chart]
 
 
@@ -37,6 +44,8 @@ def getCorrelationIndicator(data, value1, value2):
         mode="gauge+number",
         value=correlation,
         domain={'x': [0, 1], 'y': [0, 1]},
+        gauge={
+            'axis': {'visible': False}},
         title={'text': "Variable Correlation"}))
     return [figure]
 
@@ -46,11 +55,13 @@ def getPieChart(coefficients, value):
         df = getPositiveCoefficients(coefficients)
         chart = px.pie(df, values='abs_weights', names='features',
                        template=TEMPLATE,
+                       color_discrete_sequence=px.colors.sequential.RdBu,
                        title='Factors Contributing to Attrition')
     else:
         df = getNegativeCoefficients(coefficients)
         chart = px.pie(df, values='abs_weights', names='features',
                        template=TEMPLATE,
+                       color_discrete_sequence=px.colors.sequential.RdBu,
                        title='Factors Keeping Employees Stay')
 
     chart.update_layout(transition_duration=2000,
@@ -60,8 +71,9 @@ def getPieChart(coefficients, value):
 
 def getCoefficientsChart(coefficients):
     topCoefficients = coefficients.head(15)
-    chart = px.bar(x=topCoefficients["features"],
-                   y=topCoefficients["weights"],
+    chart = px.bar(topCoefficients, x="features",
+                   y="weights",
+                   color="weights",
                    orientation="v",
                    height=700,
                    template=TEMPLATE)

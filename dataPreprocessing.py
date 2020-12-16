@@ -60,10 +60,9 @@ generalData.sort_values(by=['EmployeeID'])
 turnover = generalData["Attrition"]
 generalData = generalData.drop(
     columns=["Over18", "EmployeeCount", "StandardHours"])
+generalData = generalData.rename(columns={"Attrition": "Turnover"})
 
-generalData.to_json(path_or_buf ="ProcessedData/data.json", orient="records")
 
-generalData = generalData.drop(columns=["Attrition"])
 managerSurveyData = pd.read_csv(managerSurveyLocation)
 employeeSurveyData = pd.read_csv(employeeSurveyLocation)
 
@@ -76,6 +75,8 @@ employeeSurveyData = employeeSurveyData.drop(columns=["EmployeeID"])
 generalData = generalData.join([managerSurveyData, employeeSurveyData])
 generalData = generalData.drop(columns=["EmployeeID"])
 
+generalData.to_json(path_or_buf ="ProcessedData/data.json", orient="records")
+generalData = generalData.drop(columns=["Turnover"])
 categoricalData = list(generalData.select_dtypes(include='object').columns)
 
 # 1 -> Employee left
@@ -91,7 +92,7 @@ data = data.drop(columns=["Human Resourcestest"])
 data = data.fillna(0)
 # Data Normalization
 data = ((data-data.min())/(data.max() - data.min()))
-data.to_json(path_or_buf = "ProcessedData/data.json", orient="records" )
+data.to_json(path_or_buf = "ProcessedData/normalizedData.json", orient="records" )
 
 train, test = train_test_split(data, test_size=0.25)
 
@@ -116,6 +117,6 @@ coefficients = pd.concat([pd.DataFrame(testX.columns),
 
 coefficients.columns = ["features", "weights", "abs_weights"]
 coefficients = coefficients.sort_values(by=["abs_weights"], ascending=False)
-coefficients.to_json(path_or_buf = "ProcessedData/data.json", orient="records" )
+coefficients.to_json(path_or_buf = "ProcessedData/coefficients.json", orient="records" )
 cm = metrics.confusion_matrix(testY, predictions)
 
