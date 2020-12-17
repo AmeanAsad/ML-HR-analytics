@@ -10,7 +10,7 @@ import json
 import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
-
+import random
 TEMPLATE = "plotly"
 px.defaults.color_continuous_scale = px.colors.sequential.RdBu
 
@@ -45,8 +45,16 @@ def getCorrelationIndicator(data, value1, value2):
         value=correlation,
         domain={'x': [0, 1], 'y': [0, 1]},
         gauge={
-            'axis': {'visible': False}},
+            'axis': {'visible': False, 'range' : [-1,1]},
+            'bar': {'color': "black", "thickness":0.2},
+
+            'steps': [
+            {'range': [-1, 0], 'color': "#F08080"},
+            {'range': [0, 1], 'color': "#90EE90"}],
+        },
         title={'text': "Variable Correlation"}))
+    figure.update_layout(transition_duration=2000,
+                        title="Number of Daily Issues")
     return [figure]
 
 
@@ -65,7 +73,8 @@ def getPieChart(coefficients, value):
                        title='Factors Keeping Employees Stay')
 
     chart.update_layout(transition_duration=2000,
-                        autosize=True)
+                        autosize=True
+                         )
     return [chart]
 
 
@@ -75,9 +84,12 @@ def getCoefficientsChart(coefficients):
                    y="weights",
                    color="weights",
                    orientation="v",
-                   height=700,
+#                   height=500,
                    template=TEMPLATE)
-    chart.update_layout(transition={
+    chart.update_layout(bargap=0.2,
+                         title="Number of Daily Issues",
+                        autosize=True,
+                        transition={
         'duration': 500,
         'easing': 'cubic-in-out'
     })
