@@ -4,41 +4,27 @@ Created on Sun Dec 13 19:31:58 2020
 
 @author: amean
 """
-import pandas as pd
 
-import plotly.graph_objs as go
 import dash_bootstrap_components as dbc
-import ast
-import plotly.express as px
 import dash_html_components as html
 import dash_core_components as dcc
 from dash.dependencies import Input, Output
 import dash
 import appUtil
-import json
 import visdcc
-
-text = """
-Machine learning has definitely become on the biggest concepts and buzzwords in the tech industry in the past 5 years. To put some value to words, Stanford University's 2019 AI Index states that out of the organizations they have researched,  over 85%  think that Machine Learning integration will improve performance and will be required to optimize cost reduction. Indeed's job reports show that the demand for machine learning jobs in organizations has grown by 344% in 2019. The number of research papers regarding Machine Learning has more than trippled in the past two years. Safe to say, Machine learning will be a huge part of the near tech future. 
-
- 
-
-I started my journey learning Machine Learning a few years ago when I started engineering in University, mainly because I was interested to see what I can do with it. As a learner, I noticed you can start implementing algorithms without really understanding the underlying functionality using some existing frameworks that do most of the work for you.  It is indeed a very powerful tool, that is applicable to a lot of fields, even outside of technology and it can be used in extremely devious applications.  """
-
 
 PATH = "ProcessedData"
 COEFFICIENTS_PATH = "{}/coefficients.json".format(PATH)
 DATA_PATH = "{}/data.json".format(PATH)
 NORMALIZED_DATA_PATH = "{}/normalizedData.json".format(PATH)
+TEXT_PATH = "text.json"
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.COSMO])
-#
-# commont_style = {"display": "flex",
-#                 "display": "-webkit-flex",
-#                 "flex-wrap": "wrap", "width": "100%", "padding": "1%", "margin-bottom": "2%"}
+
 data = appUtil.getDataFrame(DATA_PATH)
 normalizedData = appUtil.getDataFrame(NORMALIZED_DATA_PATH)
 coefficients = appUtil.getDataFrame(COEFFICIENTS_PATH)
+text = appUtil.getTextObject(TEXT_PATH)
 
 
 def dropDown(uniqueId, data, width):
@@ -49,6 +35,15 @@ def dropDown(uniqueId, data, width):
         style={"width": width}
     )
     return dropdown
+
+
+def createSection(textObject, title, sectionId):
+    textList = text[textObject]
+    paragraphs = [html.P([item]) for item in textList]
+    section = dbc.Row([html.H2(title, id=sectionId),
+                       html.Div(paragraphs),
+                       ], style={"paddingTop": "2%", "paddingLeft": "3%", "paddingRight": "3%"})
+    return section
 
 
 def createButtonCard():
@@ -73,11 +68,20 @@ def createButtonCard():
 def getButtonGroup():
     buttonGroup = dbc.ButtonGroup(
         [
-            dbc.Button("Primary", id="test", size="lg", outline=True,
+            dbc.Button("Short Intro", id="intro", size="lg", outline=True,
                        color="dark", className="mr-1"),
-            dbc.Button("Primary", size="lg", outline=True,
+            dbc.Button("The Monologue", id="mon", size="lg", outline=True,
                        color="dark", className="mr-1"),
-            dbc.Button("Primary", size="lg", outline=True,
+            dbc.Button("About the Data", id="dat", size="lg", outline=True,
+                       color="dark", className="mr-1"),
+            dbc.Button("The ML Model", id="mod", size="lg", outline=True,
+                       color="dark", className="mr-1"),
+            dbc.Button("Visualization Dashboard", id="viz", size="lg",
+                       outline=True,
+                       color="dark", className="mr-1"),
+            dbc.Button("The Good Side", id="good", size="lg", outline=True,
+                       color="dark", className="mr-1"),
+            dbc.Button("The Dark Side", id="bad", size="lg", outline=True,
                        color="dark", className="mr-1"),
 
 
@@ -162,8 +166,8 @@ def getChartSection1():
         [
             dbc.Row(
                 [
-                    dbc.Col([getCoeffChart()], sm=7, xs=12),
-                    dbc.Col([getPieChart()], sm=5),
+                    dbc.Col([getCoeffChart()], lg=7),
+                    dbc.Col([getPieChart()], lg=5),
                 ]
             )
         ]
@@ -174,33 +178,37 @@ def getChartSection1():
 def getChartSection2():
     chart = dbc.Row(
         [
-            dbc.Col([getDistChart()], sm=8, xs=12),
-            dbc.Col([getGauge()], sm=4),
+            dbc.Col([getDistChart()], lg=8),
+            dbc.Col([getGauge()], lg=4),
         ]
     )
     return chart
 
-def getIntroSection():
-    intro =  dbc.Row([html.H2("Short Intro"),
-            html.P(text)
-            ], style={"padding":"5%"})
-    return intro
 
 coefficientChart = appUtil.getCoefficientsChart(coefficients)
 
 app.layout = html.Div(children=[
-    visdcc.Run_js(id='javascript'),
+    visdcc.Run_js(id='intro1'),
+    visdcc.Run_js(id='mon1'),
+    visdcc.Run_js(id='dat1'),
+    visdcc.Run_js(id='mod1'),
+    visdcc.Run_js(id='viz1'),
 
-    dbc.Row(html.H1(children='Git Analysis with Python'), justify='center'),
+    dbc.Row(html.H1(children='Machine Learning in Organizations'), justify='center'),
     html.Div(id='data', style={'display': 'none'}),
 
     dbc.Row([
         dbc.Col([html.Div([createButtonCard()],  style={"height": "100vh", "position": "sticky",
                                                         "top": "0", "zIndex": "2000", "textAlign": "center", "paddingTop": "30%",
                                                         "paddingBottom": "40%",
-                                                        "background-color": "white"})], md=2),
+                                                        "background-color": "white"})], lg=2),
         dbc.Col([
-            getIntroSection(),
+            createSection("shortIntro", "Short Intro", "introduction"),
+            createSection("longIntro", "The Monologue", "monologue"),
+            createSection("data", "About the Data", "about-data"),
+            createSection("model", "The Machine Learning Model", "model"),
+            createSection("dashboard", "Visualization Dashboard", "dashboard"),
+
             getChartSection1(),
             getChartSection2(),
 
@@ -248,12 +256,60 @@ def correlationPlot(correlator1, correlator2):
 
 
 @app.callback(
-    Output('javascript', 'run'),
-    [Input('test', 'n_clicks')])
-def myfun(x):
+    Output('intro1', 'run'),
+    [Input('intro', 'n_clicks')])
+def myfun1(x):
     if x:
         return """
-            var elmnt = document.getElementById('gauge-correlation');
+            var elmnt = document.getElementById('introduction');
+            elmnt.scrollIntoView();
+                """
+    return ""
+
+
+@app.callback(
+    Output('mon1', 'run'),
+    [Input('mon', 'n_clicks')])
+def myfun2(x):
+    if x:
+        return """
+            var elmnt = document.getElementById('monologue');
+            elmnt.scrollIntoView();
+                """
+    return ""
+
+
+@app.callback(
+    Output('dat1', 'run'),
+    [Input('dat', 'n_clicks')])
+def myfun3(x):
+    if x:
+        return """
+            var elmnt = document.getElementById('about-data');
+            elmnt.scrollIntoView();
+                """
+    return ""
+
+
+@app.callback(
+    Output('mod1', 'run'),
+    [Input('mod', 'n_clicks')])
+def myfun4(x):
+    if x:
+        return """
+            var elmnt = document.getElementById('model');
+            elmnt.scrollIntoView();
+                """
+    return ""
+
+
+@app.callback(
+    Output('viz1', 'run'),
+    [Input('viz', 'n_clicks')])
+def myfun5(x):
+    if x:
+        return """
+            var elmnt = document.getElementById('dashboard');
             elmnt.scrollIntoView();
                 """
     return ""
