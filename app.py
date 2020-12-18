@@ -20,7 +20,7 @@ NORMALIZED_DATA_PATH = "{}/normalizedData.json".format(PATH)
 TEXT_PATH = "text.json"
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.COSMO])
-
+server = app.server
 data = appUtil.getDataFrame(DATA_PATH)
 normalizedData = appUtil.getDataFrame(NORMALIZED_DATA_PATH)
 coefficients = appUtil.getDataFrame(COEFFICIENTS_PATH)
