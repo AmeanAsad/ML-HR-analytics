@@ -8,7 +8,7 @@ Created on Sun Dec 13 19:31:58 2020
 import dash_bootstrap_components as dbc
 import dash_html_components as html
 import dash_core_components as dcc
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 import dash
 import appUtil
 import visdcc
@@ -27,11 +27,11 @@ coefficients = appUtil.getDataFrame(COEFFICIENTS_PATH)
 text = appUtil.getTextObject(TEXT_PATH)
 
 
-def dropDown(uniqueId, data, width):
+def dropDown(uniqueId, data, width, val):
     dropdown = dcc.Dropdown(
         id=uniqueId,
         options=appUtil.getLabels(data),
-        value="Age",
+        value=val,
         style={"width": width}
     )
     return dropdown
@@ -43,6 +43,13 @@ def createSection(textObject, title, sectionId):
     section = dbc.Row([html.H2(title, id=sectionId),
                        html.Div(paragraphs),
                        ], style={"paddingTop": "2%", "paddingLeft": "3%", "paddingRight": "3%"})
+    return section
+
+
+def createModalSection(textObject):
+    textList = text[textObject]
+    paragraphs = [html.P([item]) for item in textList]
+    section = html.Div(paragraphs),
     return section
 
 
@@ -65,6 +72,25 @@ def createButtonCard():
     return card
 
 
+def getModal(name):
+    modal = html.Div(
+        [
+            dbc.Button("Figure Information", id="open" + name),
+            dbc.Modal(
+                [
+                    dbc.ModalBody(createModalSection(name)),
+                    dbc.ModalFooter(
+                        dbc.Button("Close", id="close" +
+                                   name, className="ml-auto")
+                    ),
+                ],
+                id="modal"+name,
+            ),
+        ]
+    )
+    return modal
+
+
 def getButtonGroup():
     buttonGroup = dbc.ButtonGroup(
         [
@@ -79,9 +105,11 @@ def getButtonGroup():
             dbc.Button("Visualization Dashboard", id="viz", size="lg",
                        outline=True,
                        color="dark", className="mr-1"),
-            dbc.Button("The Good Side", id="good", size="lg", outline=True,
+            dbc.Button("The Good Side", id="gd", size="lg", outline=True,
                        color="dark", className="mr-1"),
-            dbc.Button("The Dark Side", id="bad", size="lg", outline=True,
+            dbc.Button("The Dark Side", id="bd", size="lg", outline=True,
+                       color="dark", className="mr-1"),
+            dbc.Button("Final Note", id="cnc", size="lg", outline=True,
                        color="dark", className="mr-1"),
 
 
@@ -91,16 +119,16 @@ def getButtonGroup():
     return buttonGroup
 
 
-def createChartCard(chart, chartid):
+def createChartCard(chart, title, modalName):
     card = dbc.Card(
         [
             dbc.CardBody(
                 [
-                    html.H4("Card title", className="card-title"),
+                    html.H4(title, className="card-title"),
                     html.Div(
                         chart
                     ),
-                    dbc.Button("Go somewhere", color="primary"),
+                    getModal(modalName),
                 ]
             ),
         ],
@@ -112,8 +140,9 @@ def createChartCard(chart, chartid):
 def getCorrelatorDropdowns(data):
     dropdown = dbc.Row(
         [
-            dbc.Col(dropDown("correlator-1", data, "100%"), md=6),
-            dbc.Col(dropDown("correlator-2", data, "100%"), md=6)
+            dbc.Col(dropDown("correlator-1", data, "100%", "Turnover"), md=6),
+            dbc.Col(dropDown("correlator-2", data,
+                             "100%", "YearsWithCurrManager"), md=6)
         ]
     )
     return dropdown
@@ -122,7 +151,7 @@ def getCorrelatorDropdowns(data):
 def getCoeffChart():
     chart = dcc.Graph(id='top-labels',
                       figure=coefficientChart)
-    return createChartCard(chart, "test")
+    return createChartCard(chart, "Figure 1: Feature Importance", "md1")
 
 
 def getPieChart():
@@ -142,7 +171,7 @@ def getPieChart():
                           style={"width": "100%"}))
 
     ])
-    return createChartCard(chart, "test")
+    return createChartCard(chart, "Figure 4: Contributing Features", "md4")
 
 
 def getGauge():
@@ -150,15 +179,15 @@ def getGauge():
         getCorrelatorDropdowns(normalizedData),
         dbc.Row(dcc.Graph(id='gauge-correlation',
                           style={"width": "100%"}))])
-    return createChartCard(chart, "test")
+    return createChartCard(chart, "Figure 2: Correlations", "md2")
 
 
 def getDistChart():
     chart = html.Div([
-        dbc.Row(dropDown("distplot-dropdown", data, "75%")),
+        dbc.Row(dropDown("distplot-dropdown", data, "75%", "Age")),
         dbc.Row(dcc.Graph(id='histograms',
                           style={"width": "100%"}))])
-    return createChartCard(chart, "test")
+    return createChartCard(chart, "Figure 3: Dsitribution Plots", "md3")
 
 
 def getChartSection1():
@@ -166,8 +195,9 @@ def getChartSection1():
         [
             dbc.Row(
                 [
-                    dbc.Col([getCoeffChart()], lg=7),
-                    dbc.Col([getPieChart()], lg=5),
+                    dbc.Col([getCoeffChart()], lg=8),
+                    dbc.Col([getGauge()], lg=4),
+
                 ]
             )
         ]
@@ -178,8 +208,8 @@ def getChartSection1():
 def getChartSection2():
     chart = dbc.Row(
         [
-            dbc.Col([getDistChart()], lg=8),
-            dbc.Col([getGauge()], lg=4),
+            dbc.Col([getDistChart()], lg=7),
+            dbc.Col([getPieChart()], lg=5),
         ]
     )
     return chart
@@ -193,6 +223,9 @@ app.layout = html.Div(children=[
     visdcc.Run_js(id='dat1'),
     visdcc.Run_js(id='mod1'),
     visdcc.Run_js(id='viz1'),
+    visdcc.Run_js(id='gd1'),
+    visdcc.Run_js(id='bd1'),
+    visdcc.Run_js(id='cnc1'),
 
     dbc.Row(html.H1(children='Machine Learning in Organizations'), justify='center'),
     html.Div(id='data', style={'display': 'none'}),
@@ -201,6 +234,7 @@ app.layout = html.Div(children=[
         dbc.Col([html.Div([createButtonCard()],  style={"height": "100vh", "position": "sticky",
                                                         "top": "0", "zIndex": "2000", "textAlign": "center", "paddingTop": "30%",
                                                         "paddingBottom": "40%",
+
                                                         "background-color": "white"})], lg=2),
         dbc.Col([
             createSection("shortIntro", "Short Intro", "introduction"),
@@ -208,9 +242,12 @@ app.layout = html.Div(children=[
             createSection("data", "About the Data", "about-data"),
             createSection("model", "The Machine Learning Model", "model"),
             createSection("dashboard", "Visualization Dashboard", "dashboard"),
-
             getChartSection1(),
             getChartSection2(),
+            createSection("good", "The Good Side", "good"),
+            createSection("bad", "The Dark Side", "bad"),
+            createSection("conclusion", "A Final Note", "conc"),
+
 
         ])
 
@@ -221,6 +258,12 @@ app.layout = html.Div(children=[
 ],   style={
     'padding': "2%"
 })
+
+
+def modalOpen(n1, n2, is_open):
+    if n1 or n2:
+        return not is_open
+    return is_open
 
 
 @app.callback(
@@ -253,6 +296,42 @@ def correlationPlot(correlator1, correlator2):
                                             correlator1,
                                             correlator2)
     return chart
+
+
+@app.callback(
+    Output("modalmd1", "is_open"),
+    [Input("openmd1", "n_clicks"), Input("closemd1", "n_clicks")],
+    [State("modalmd1", "is_open")],
+)
+def toggle_modal1(n1, n2, is_open):
+    return modalOpen(n1, n2, is_open)
+
+
+@app.callback(
+    Output("modalmd2", "is_open"),
+    [Input("openmd2", "n_clicks"), Input("closemd2", "n_clicks")],
+    [State("modalmd2", "is_open")],
+)
+def toggle_modal2(n1, n2, is_open):
+    return modalOpen(n1, n2, is_open)
+
+
+@app.callback(
+    Output("modalmd3", "is_open"),
+    [Input("openmd3", "n_clicks"), Input("closemd3", "n_clicks")],
+    [State("modalmd3", "is_open")],
+)
+def toggle_modal3(n1, n2, is_open):
+    return modalOpen(n1, n2, is_open)
+
+
+@app.callback(
+    Output("modalmd4", "is_open"),
+    [Input("openmd4", "n_clicks"), Input("closemd4", "n_clicks")],
+    [State("modalmd4", "is_open")],
+)
+def toggle_modal4(n1, n2, is_open):
+    return modalOpen(n1, n2, is_open)
 
 
 @app.callback(
@@ -310,6 +389,42 @@ def myfun5(x):
     if x:
         return """
             var elmnt = document.getElementById('dashboard');
+            elmnt.scrollIntoView();
+                """
+    return ""
+
+
+@app.callback(
+    Output('gd1', 'run'),
+    [Input('gd', 'n_clicks')])
+def myfun6(x):
+    if x:
+        return """
+            var elmnt = document.getElementById('good');
+            elmnt.scrollIntoView();
+                """
+    return ""
+
+
+@app.callback(
+    Output('bd1', 'run'),
+    [Input('bd', 'n_clicks')])
+def myfun7(x):
+    if x:
+        return """
+            var elmnt = document.getElementById('bad');
+            elmnt.scrollIntoView();
+                """
+    return ""
+
+
+@app.callback(
+    Output('cnc1', 'run'),
+    [Input('cnc', 'n_clicks')])
+def myfun8(x):
+    if x:
+        return """
+            var elmnt = document.getElementById('conc');
             elmnt.scrollIntoView();
                 """
     return ""
