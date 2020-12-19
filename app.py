@@ -21,6 +21,8 @@ TEXT_PATH = "text.json"
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.COSMO])
 server = app.server
+app.title = "Unessay"
+devMode = False
 data = appUtil.getDataFrame(DATA_PATH)
 normalizedData = appUtil.getDataFrame(NORMALIZED_DATA_PATH)
 coefficients = appUtil.getDataFrame(COEFFICIENTS_PATH)
@@ -431,4 +433,4 @@ def myfun8(x):
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True, use_reloader=False)
+    app.run_server(debug=devMode, use_reloader=False)
