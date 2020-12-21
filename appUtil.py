@@ -6,11 +6,10 @@ Created on Sun Dec 13 19:54:51 2020
 """
 
 import pandas as pd
-import json
 import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
-import random
+import json
 TEMPLATE = "plotly"
 px.defaults.color_continuous_scale = px.colors.sequential.RdBu
 
@@ -29,7 +28,6 @@ def getDataFrame(path):
 
 
 def getDistPlots(data, value):
-    vals = data[value].to_numpy()
     chart = px.histogram(data, x=value,
                          color_discrete_sequence=['#1f77b4', ],
                          template=TEMPLATE)

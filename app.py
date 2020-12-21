@@ -12,6 +12,7 @@ from dash.dependencies import Input, Output, State
 import dash
 import appUtil
 import visdcc
+from componentUtil import *
 
 PATH = "ProcessedData"
 COEFFICIENTS_PATH = "{}/coefficients.json".format(PATH)
@@ -29,196 +30,6 @@ coefficients = appUtil.getDataFrame(COEFFICIENTS_PATH)
 text = appUtil.getTextObject(TEXT_PATH)
 
 
-def dropDown(uniqueId, data, width, val):
-    dropdown = dcc.Dropdown(
-        id=uniqueId,
-        options=appUtil.getLabels(data),
-        value=val,
-        style={"width": width}
-    )
-    return dropdown
-
-
-def createSection(textObject, title, sectionId):
-    textList = text[textObject]
-    paragraphs = [html.P([item]) for item in textList]
-    section = dbc.Row([html.H2(title, id=sectionId),
-                       html.Div(paragraphs),
-                       ], style={"paddingTop": "2%", "paddingLeft": "3%", "paddingRight": "3%"})
-    return section
-
-
-def createModalSection(textObject):
-    textList = text[textObject]
-    paragraphs = [html.P([item]) for item in textList]
-    section = html.Div(paragraphs),
-    return section
-
-
-def createButtonCard():
-    card = dbc.Card(
-        [
-            dbc.CardBody(
-                [
-                    html.H4("Navigation Menu", className="card-title"),
-                    html.Div(
-                        getButtonGroup()
-                    ),
-
-                ]
-            ),
-        ],
-        style={"width": "100%", "height": "100%",
-               "padding": "2%", "margin-bottom": "2%"}
-    )
-    return card
-
-
-def getModal(name):
-    modal = html.Div(
-        [
-            dbc.Button("Figure Information", id="open" + name),
-            dbc.Modal(
-                [
-                    dbc.ModalBody(createModalSection(name)),
-                    dbc.ModalFooter(
-                        dbc.Button("Close", id="close" +
-                                   name, className="ml-auto")
-                    ),
-                ],
-                id="modal"+name,
-            ),
-        ]
-    )
-    return modal
-
-
-def getButtonGroup():
-    buttonGroup = dbc.ButtonGroup(
-        [
-            dbc.Button("Short Intro", id="intro", size="lg", outline=True,
-                       color="dark", className="mr-1"),
-            dbc.Button("The Monologue", id="mon", size="lg", outline=True,
-                       color="dark", className="mr-1"),
-            dbc.Button("About the Data", id="dat", size="lg", outline=True,
-                       color="dark", className="mr-1"),
-            dbc.Button("The ML Model", id="mod", size="lg", outline=True,
-                       color="dark", className="mr-1"),
-            dbc.Button("Visualization Dashboard", id="viz", size="lg",
-                       outline=True,
-                       color="dark", className="mr-1"),
-            dbc.Button("The Good Side", id="gd", size="lg", outline=True,
-                       color="dark", className="mr-1"),
-            dbc.Button("The Dark Side", id="bd", size="lg", outline=True,
-                       color="dark", className="mr-1"),
-            dbc.Button("Final Note", id="cnc", size="lg", outline=True,
-                       color="dark", className="mr-1"),
-
-
-        ],
-        vertical=True, style={"margin-top": "10%", "width": "90%"}
-    )
-    return buttonGroup
-
-
-def createChartCard(chart, title, modalName):
-    card = dbc.Card(
-        [
-            dbc.CardBody(
-                [
-                    html.H4(title, className="card-title"),
-                    html.Div(
-                        chart
-                    ),
-                    getModal(modalName),
-                ]
-            ),
-        ],
-        style={"width": "100%", "padding": "1%", "margin-bottom": "2%"}
-    )
-    return card
-
-
-def getCorrelatorDropdowns(data):
-    dropdown = dbc.Row(
-        [
-            dbc.Col(dropDown("correlator-1", data, "100%", "Turnover"), md=6),
-            dbc.Col(dropDown("correlator-2", data,
-                             "100%", "YearsWithCurrManager"), md=6)
-        ]
-    )
-    return dropdown
-
-
-def getCoeffChart():
-    chart = dcc.Graph(id='top-labels',
-                      figure=coefficientChart)
-    return createChartCard(chart, "Figure 1: Feature Importance", "md1")
-
-
-def getPieChart():
-    chart = html.Div([
-        dbc.Row(dcc.RadioItems(
-            id='radio-items',
-            options=[
-                     {'label': '   Positive   ', 'value': 'positive'},
-                     {'label': '   Negative   ', 'value': 'negative'},
-                     ],
-            value="positive",
-            labelStyle={"margin-right": "2%"},
-            style={"width": "100%"}
-        ),
-            style={"width": "100%"}),
-        dbc.Row(dcc.Graph(id='contributers',
-                          style={"width": "100%"}))
-
-    ])
-    return createChartCard(chart, "Figure 4: Contributing Features", "md4")
-
-
-def getGauge():
-    chart = html.Div([
-        getCorrelatorDropdowns(normalizedData),
-        dbc.Row(dcc.Graph(id='gauge-correlation',
-                          style={"width": "100%"}))])
-    return createChartCard(chart, "Figure 2: Correlations", "md2")
-
-
-def getDistChart():
-    chart = html.Div([
-        dbc.Row(dropDown("distplot-dropdown", data, "75%", "Age")),
-        dbc.Row(dcc.Graph(id='histograms',
-                          style={"width": "100%"}))])
-    return createChartCard(chart, "Figure 3: Dsitribution Plots", "md3")
-
-
-def getChartSection1():
-    chart = html.Div(
-        [
-            dbc.Row(
-                [
-                    dbc.Col([getCoeffChart()], lg=8),
-                    dbc.Col([getGauge()], lg=4),
-
-                ]
-            )
-        ]
-    )
-    return chart
-
-
-def getChartSection2():
-    chart = dbc.Row(
-        [
-            dbc.Col([getDistChart()], lg=7),
-            dbc.Col([getPieChart()], lg=5),
-        ]
-    )
-    return chart
-
-
-coefficientChart = appUtil.getCoefficientsChart(coefficients)
-
 app.layout = html.Div(children=[
     visdcc.Run_js(id='intro1'),
     visdcc.Run_js(id='mon1'),
@@ -229,15 +40,21 @@ app.layout = html.Div(children=[
     visdcc.Run_js(id='bd1'),
     visdcc.Run_js(id='cnc1'),
 
-    dbc.Row(html.H1(children='Machine Learning in Organizations'), justify='center'),
-    html.Div(id='data', style={'display': 'none'}),
-
     dbc.Row([
-        dbc.Col([html.Div([createButtonCard()],  style={"height": "100vh", "position": "sticky",
-                                                        "top": "0", "zIndex": "2000", "textAlign": "center", "paddingTop": "30%",
-                                                        "paddingBottom": "40%",
+        dbc.Col([html.Div([])], md=4),
+        dbc.Col(dbc.Row(
+            html.H1(children='Machine Learning in Organizations'),
+            justify="center"), md=4),
+        dbc.Col(getHeader(), align="right")
+    ]),
+    html.Div(id='data', style={'display': 'none'}),
+    dbc.Row([
+        dbc.Col([html.Div([createButtonCard()],
+                          style={"height": "100vh", "position": "sticky",
+                                 "top": "0", "zIndex": "2000", "textAlign": "center", "paddingTop": "30%",
+                                 "paddingBottom": "40%",
 
-                                                        "background-color": "white"})], lg=2),
+                                 "background-color": "white"})], lg=2),
         dbc.Col([
             createSection("shortIntro", "Short Intro", "introduction"),
             createSection("longIntro", "The Monologue", "monologue"),
